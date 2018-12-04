@@ -14,7 +14,7 @@ namespace DependencyInjectionContainer
             dictionary = new ConcurrentDictionary<Type, ConfiguratedType>();
         }
 
-        public IEnumerable<ConfiguratedType> GetRegisteredTypes(Type type)
+        public IEnumerable<ConfiguratedType> GetConfiguratedTypes(Type type)
         {
             return dictionary?.Values;
         }
@@ -50,6 +50,11 @@ namespace DependencyInjectionContainer
             {
                 throw new Exception($"{nameof(tImplementation)} can't be an interface or abstract");
             }
+        }
+
+        public ConfiguratedType GetConfiguratedType(Type tinterface)
+        {
+            return (dictionary.TryGetValue(tinterface, out var value)) ? value : null;
         }
     }
 }

@@ -16,6 +16,8 @@ namespace DependencyInjectionContainer.Interfaces
 
         void Regiser<TImplementation>() where TImplementation : class;
 
-        IEnumerable<ConfiguratedType> GetRegisteredTypes(Type type);
+        IEnumerable<ConfiguratedType> GetConfiguratedTypes(Type type);
+
+        ConfiguratedType GetConfiguratedType(Type tinterface);
     }
 }
