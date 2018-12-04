@@ -2,24 +2,21 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DependencyInjectionContainer
 {
-    class DIConfiguration : IDIConfiguration
+    public class DIConfiguration : IDIConfiguration
     {
-        private readonly ConcurrentDictionary<Type, object> dictionary;
+        private readonly ConcurrentDictionary<Type, ConfiguratedType> dictionary;
 
         public DIConfiguration()
         {
-            dictionary = new ConcurrentDictionary<Type, object>();
+            dictionary = new ConcurrentDictionary<Type, ConfiguratedType>();
         }
 
-        public IEnumerable<object> GetRegisteredTypes(Type type)
+        public IEnumerable<ConfiguratedType> GetRegisteredTypes(Type type)
         {
-            throw new NotImplementedException();
+            return dictionary?.Values;
         }
 
         public void Regiser<TImplementation>() where TImplementation : class
@@ -36,7 +33,23 @@ namespace DependencyInjectionContainer
 
         public void Register(Type tInterface, Type tImplementation)
         {
-            throw new NotImplementedException();
+            if (!tImplementation.IsInterface && !tImplementation.IsAbstract)
+            {
+                ConfiguratedType configuratedType = new ConfiguratedType(tImplementation, tInterface);
+
+                if (!dictionary.Values.Contains(configuratedType))
+                {
+                    dictionary.TryAdd(tInterface, configuratedType);
+                }
+                else
+                {
+                    throw new Exception($"can't add value to {nameof(dictionary)}");
+                }
+            }
+            else
+            {
+                throw new Exception($"{nameof(tImplementation)} can't be an interface or abstract");
+            }
         }
     }
 }
