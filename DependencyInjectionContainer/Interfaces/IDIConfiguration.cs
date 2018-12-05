@@ -8,13 +8,11 @@ namespace DependencyInjectionContainer.Interfaces
 {
     public interface IDIConfiguration
     {
-        void Register<TInterface, TImplementation>()
-            where TInterface : class
-            where TImplementation : TInterface;
+        void Register<TInterface, TImplementation>();
 
         void Register(Type tInterface, Type tImplementation);
 
-        void Regiser<TImplementation>() where TImplementation : class;
+        void Register<TImplementation>() where TImplementation : class;
 
         IEnumerable<ConfiguratedType> GetConfiguratedTypes(Type type);
 

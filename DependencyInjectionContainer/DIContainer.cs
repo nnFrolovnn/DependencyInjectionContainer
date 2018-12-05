@@ -1,5 +1,6 @@
 ﻿using DependencyInjectionContainer.Interfaces;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,32 @@ namespace DependencyInjectionContainer
         private readonly IDIConfiguration container;
         private readonly ConcurrentStack<Type> stack;
 
+        public DIContainer(IDIConfiguration dIConfiguration)
+        {
+            container = dIConfiguration;
+            stack = new ConcurrentStack<Type>();
+        }
 
         public T Resolve<T>() where T : class
         {
-            return (T)Create(typeof(T));
+            var type = typeof(T);
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+            {
+                return (T)CreateIEnumerable(type);
+            }
+
+            var registeredType = container.GetConfiguratedType(type);
+            if (registeredType == null && type.IsGenericType)
+            {
+                registeredType = container.GetConfiguratedType(type.GetGenericTypeDefinition());
+            }
+
+            if (registeredType != null)
+            {
+                return (T)RetrieveInst(registeredType);
+            }
+
+            throw new Exception("no such type");
         }
 
         private object Create(Type type)
@@ -82,6 +105,30 @@ namespace DependencyInjectionContainer
             }
         }
 
+        private object CreateIEnumerable(Type type)
+        {
+            var innerType = type.GenericTypeArguments.FirstOrDefault();
+            var registeredType = container.GetConfiguratedType(innerType);
+
+            if (registeredType != null)
+            {
+                var collection = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(innerType));
+
+                var registeredTypes = container.GetConfiguratedTypes(innerType);
+                foreach (var item in registeredTypes)
+                {
+                    collection.Add(RetrieveInst(item));
+                }
+
+                return collection;
+            }
+            else
+            {
+                throw new Exception($"Not registered type: {innerType?.FullName}");
+            }
+
+            
+        }
 
         private object CreatefromConstructor(ConstructorInfo constructor)
         {
@@ -114,6 +161,5 @@ namespace DependencyInjectionContainer
 
             return null;
         }
-
     }
 }

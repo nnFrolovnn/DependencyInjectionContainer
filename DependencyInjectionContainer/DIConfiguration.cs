@@ -19,14 +19,12 @@ namespace DependencyInjectionContainer
             return dictionary?.Values;
         }
 
-        public void Regiser<TImplementation>() where TImplementation : class
+        public void Register<TImplementation>() where TImplementation : class
         {
             Register(typeof(TImplementation), typeof(TImplementation));
         }
 
         public void Register<TInterface, TImplementation>()
-            where TInterface : class
-            where TImplementation : TInterface
         {
             Register(typeof(TInterface), typeof(TImplementation));
         }
