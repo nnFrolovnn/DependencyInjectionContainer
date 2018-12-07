@@ -14,12 +14,12 @@ namespace DIC_Test
         public void IsSingleton()
         {
             DIConfiguration conf = new DIConfiguration();
-            conf.RegisterSingleton<IBar, BarFromIBar>();
+            conf.RegisterSingleton<BarFromABar>();
 
             DIContainer container = new DIContainer(conf);
 
-            IBar bar1 = container.Resolve<IBar>();
-            IBar bar2 = container.Resolve<IBar>();
+            BarFromABar bar1 = container.Resolve<BarFromABar>();
+            BarFromABar bar2 = container.Resolve<BarFromABar>();
 
             Assert.AreEqual(bar1, bar2);
         }
@@ -32,8 +32,8 @@ namespace DIC_Test
 
             DIContainer container = new DIContainer(conf);
 
-            IBar bar1 = container.Resolve<BarFromABar>();
-            IBar bar2 = container.Resolve<BarFromABar>();
+            IBar bar1 = container.Resolve<IBar>();
+            IBar bar2 = container.Resolve<IBar>();
 
             Assert.AreNotEqual(bar1, bar2);
         }

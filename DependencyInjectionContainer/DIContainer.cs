@@ -139,14 +139,13 @@ namespace DependencyInjectionContainer
 
         private object CreateIEnumerable(Type type)
         {
-            var innerType = type.GenericTypeArguments.FirstOrDefault();
-            var registeredType = container.GetConfiguratedType(innerType);
+            var registeredType = container.GetConfiguratedType(type);
 
             if (registeredType != null)
             {
-                var collection = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(innerType));
+                var collection = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(type));
 
-                var registeredTypes = container.GetConfiguratedTypes(innerType);
+                var registeredTypes = container.GetConfiguratedTypes(type);
                 foreach (var item in registeredTypes)
                 {
                     collection.Add(RetrieveInst(item));
@@ -156,7 +155,7 @@ namespace DependencyInjectionContainer
             }
             else
             {
-                throw new Exception($"Not registered type: {innerType?.FullName}");
+                throw new Exception($"Not registered type: {type?.FullName}");
             }         
         }
 
@@ -189,12 +188,8 @@ namespace DependencyInjectionContainer
                             }
                         }
                     }
-                    else
-                    {
-                        return registeredType.GetInstance;
-                    }
+                    return registeredType.GetInstance;                  
                 }
-
 
                 object createdInst = Create(registeredType.GetImplementationInterface);
                 return createdInst;

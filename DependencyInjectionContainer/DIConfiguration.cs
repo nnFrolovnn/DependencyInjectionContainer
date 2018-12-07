@@ -55,7 +55,7 @@ namespace DependencyInjectionContainer
         {
             if (!tImplementation.IsInterface && !tImplementation.IsAbstract)
             {
-                ConfiguratedType configuratedType = new ConfiguratedType(tImplementation, tInterface);
+                ConfiguratedType configuratedType = new ConfiguratedType(tImplementation, tInterface, isSingleton);
 
                 if (!dictionary.TryGetValue(tInterface, out var list))
                 {
