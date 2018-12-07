@@ -31,22 +31,25 @@ namespace DIC_Test.TestClasses
 
     internal class Foo : IFoo
     {
-        public IBar Bar { get; }
+        public ABar Bar { get; }
 
-        public Foo(IBar bar)
+        public Foo(ABar bar)
         {
             Bar = bar;
         }
     }
 
-    internal class IEnumFoo<T>
+
+    internal class Nea { }
+
+    internal class IGenFoo<T>
     {
         T val;
     }
 
-    internal class IEnumBar<T> where T : class
+    internal class IGenBar<T> where T : class
     {
-        public IEnumBar(T val)
+        public IGenBar(T val)
         {
 
         }

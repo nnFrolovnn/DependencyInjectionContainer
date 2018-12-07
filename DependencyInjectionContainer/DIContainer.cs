@@ -34,12 +34,15 @@ namespace DependencyInjectionContainer
         {
             if(configuration != null)
             {
-                IDictionary<Type, ConfiguratedType> typesDictionary = configuration.RegisteredTypesDictionary;
-                foreach(var pair in typesDictionary)
+                var dict = configuration.RegisteredTypesDictionary;
+                foreach (var pair in dict)
                 {
-                    if(pair.Value.GetImplementation.IsAbstract || pair.Value.GetImplementation.IsInterface)
+                    foreach (var item in pair.Value)
                     {
-                        return false;
+                        if (item.GetImplementation.IsAbstract || item.GetImplementation.IsInterface)
+                        {
+                            return false;
+                        }
                     }
                 }
 

@@ -8,7 +8,7 @@ namespace DependencyInjectionContainer.Interfaces
 {
     public interface IDIConfiguration
     {
-        IDictionary<Type, ConfiguratedType> RegisteredTypesDictionary { get; }
+        IDictionary<Type, List<ConfiguratedType>> RegisteredTypesDictionary { get; }
 
         void Register<TInterface, TImplementation>();
 

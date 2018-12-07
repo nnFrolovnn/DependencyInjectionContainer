@@ -8,13 +8,13 @@ namespace DependencyInjectionContainer
 {
     public class DIConfiguration : IDIConfiguration
     {
-        private readonly ConcurrentDictionary<Type, ConfiguratedType> dictionary;
+        private readonly Dictionary<Type, List<ConfiguratedType>> dictionary;
 
-        public IDictionary<Type, ConfiguratedType> RegisteredTypesDictionary => dictionary;
+        public IDictionary<Type, List<ConfiguratedType>> RegisteredTypesDictionary => dictionary;
 
         public DIConfiguration()
         {
-            dictionary = new ConcurrentDictionary<Type, ConfiguratedType>();
+            dictionary = new Dictionary<Type, List<ConfiguratedType>>();
         }
 
         #region public Registration Methods
@@ -57,13 +57,20 @@ namespace DependencyInjectionContainer
             {
                 ConfiguratedType configuratedType = new ConfiguratedType(tImplementation, tInterface);
 
-                if (!dictionary.Values.Contains(configuratedType))
+                if (!dictionary.TryGetValue(tInterface, out var list))
                 {
-                    dictionary.TryAdd(tInterface, configuratedType);
+                        dictionary.Add(tInterface, new List<ConfiguratedType>() { configuratedType });
                 }
                 else
                 {
-                    throw new Exception($"can't add value to {nameof(dictionary)}");
+                    if (!list.Contains(configuratedType))
+                    {
+                        list.Add(configuratedType);
+                    }
+                    else
+                    {
+                        throw new Exception($"can't add value {nameof(tInterface)} to {nameof(dictionary)}");
+                    }
                 }
             }
             else
@@ -74,12 +81,12 @@ namespace DependencyInjectionContainer
 
         public ConfiguratedType GetConfiguratedType(Type tinterface)
         {
-            return (dictionary.TryGetValue(tinterface, out var value)) ? value : null;
+            return (dictionary.TryGetValue(tinterface, out var value)) ? value.Last() : null;
         }
 
         public IEnumerable<ConfiguratedType> GetConfiguratedTypes(Type type)
         {
-            return dictionary.TryGetValue(type, out var configuratedType)? (IEnumerable<ConfiguratedType>)configuratedType: null;
+            return dictionary.TryGetValue(type, out var configuratedType)? configuratedType: null;
         }
     }
 }
