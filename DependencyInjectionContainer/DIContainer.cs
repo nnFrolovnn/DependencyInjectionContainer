@@ -21,14 +21,14 @@ namespace DependencyInjectionContainer
             stack = new ConcurrentStack<Type>();
         }
 
+        private bool Validate(IDIConfiguration configuration)
+        {
+
+        }
+
         public T Resolve<T>() where T : class
         {
-            var type = typeof(T);
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-            {
-                return (T)CreateIEnumerable(type);
-            }
-
+            var type = typeof(T);     
             var registeredType = container.GetConfiguratedType(type);
             if (registeredType == null && type.IsGenericType)
             {
@@ -71,7 +71,6 @@ namespace DependencyInjectionContainer
                             var useConstructor = constructors[constructorNumber - 1];
                             result = CreatefromConstructor(useConstructor);
                             isCreated = true;
-
                         }
                         catch
                         {
@@ -125,9 +124,7 @@ namespace DependencyInjectionContainer
             else
             {
                 throw new Exception($"Not registered type: {innerType?.FullName}");
-            }
-
-            
+            }         
         }
 
         private object CreatefromConstructor(ConstructorInfo constructor)
@@ -159,7 +156,12 @@ namespace DependencyInjectionContainer
                 return crestedInst;
             }
 
-            return null;
+            throw new Exception("can't resolve this type");
+        }
+
+        public IEnumerable<T> ResolveAll<T>() where T : class
+        {
+            return (IEnumerable<T>)CreateIEnumerable(typeof(T));          
         }
     }
 }

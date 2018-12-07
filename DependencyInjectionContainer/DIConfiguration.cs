@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DependencyInjectionContainer
 {
@@ -9,27 +10,48 @@ namespace DependencyInjectionContainer
     {
         private readonly ConcurrentDictionary<Type, ConfiguratedType> dictionary;
 
+        IDictionary<Type, ConfiguratedType> RegisteredTypesDictionary => dictionary;
+
         public DIConfiguration()
         {
             dictionary = new ConcurrentDictionary<Type, ConfiguratedType>();
         }
 
-        public IEnumerable<ConfiguratedType> GetConfiguratedTypes(Type type)
-        {
-            return dictionary?.Values;
-        }
+        #region public Registration Methods
 
         public void Register<TImplementation>() where TImplementation : class
         {
-            Register(typeof(TImplementation), typeof(TImplementation));
+            RegisterType(typeof(TImplementation), typeof(TImplementation));
         }
 
         public void Register<TInterface, TImplementation>()
         {
-            Register(typeof(TInterface), typeof(TImplementation));
+            RegisterType(typeof(TInterface), typeof(TImplementation));
         }
 
         public void Register(Type tInterface, Type tImplementation)
+        {
+            RegisterType(tInterface, tImplementation);
+        }    
+  
+        public void RegisterSingleton<TInterface, TImplementation>()
+        {
+            RegisterType(typeof(TInterface), typeof(TImplementation), true);
+        }
+
+        public void RegisterSingleton(Type tInterface, Type tImplementation)
+        {
+            RegisterType(tInterface, tImplementation, true);
+        }
+
+        public void RegisterSingleton<TImplementation>() where TImplementation : class
+        {
+            RegisterType(typeof(TImplementation), typeof(TImplementation), true);
+        }
+
+        #endregion
+
+        private void RegisterType(Type tInterface, Type tImplementation, bool isSingleton = false)
         {
             if (!tImplementation.IsInterface && !tImplementation.IsAbstract)
             {
@@ -53,6 +75,11 @@ namespace DependencyInjectionContainer
         public ConfiguratedType GetConfiguratedType(Type tinterface)
         {
             return (dictionary.TryGetValue(tinterface, out var value)) ? value : null;
+        }
+
+        public IEnumerable<ConfiguratedType> GetConfiguratedTypes(Type type)
+        {
+            return dictionary.TryGetValue(type, out var configuratedType)? (IEnumerable<ConfiguratedType>)configuratedType: null;
         }
     }
 }
