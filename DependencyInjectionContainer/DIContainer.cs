@@ -12,24 +12,50 @@ namespace DependencyInjectionContainer
 {
     public class DIContainer : IDIContainer
     {
+        private static object obj = new object();
         private readonly IDIConfiguration container;
         private readonly ConcurrentStack<Type> stack;
+        private Type currentType;
 
         public DIContainer(IDIConfiguration dIConfiguration)
         {
-            container = dIConfiguration;
-            stack = new ConcurrentStack<Type>();
+            if (Validate(dIConfiguration))
+            {
+                container = dIConfiguration;
+                stack = new ConcurrentStack<Type>();
+            }
+            else
+            {
+                throw new Exception("IDConfiguration has wrong structure");
+            }
         }
 
         private bool Validate(IDIConfiguration configuration)
         {
+            if(configuration != null)
+            {
+                IDictionary<Type, ConfiguratedType> typesDictionary = configuration.RegisteredTypesDictionary;
+                foreach(var pair in typesDictionary)
+                {
+                    if(pair.Value.GetImplementation.IsAbstract || pair.Value.GetImplementation.IsInterface)
+                    {
+                        return false;
+                    }
+                }
 
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public T Resolve<T>() where T : class
         {
             var type = typeof(T);     
             var registeredType = container.GetConfiguratedType(type);
+
             if (registeredType == null && type.IsGenericType)
             {
                 registeredType = container.GetConfiguratedType(type.GetGenericTypeDefinition());
@@ -37,9 +63,10 @@ namespace DependencyInjectionContainer
 
             if (registeredType != null)
             {
+                currentType = type;
                 return (T)RetrieveInst(registeredType);
             }
-
+        
             throw new Exception("no such type");
         }
 
@@ -49,16 +76,18 @@ namespace DependencyInjectionContainer
 
             if (configuratedType != null)
             {
-                if(configuratedType.GetInstance != null && configuratedType.IsSingleton)
+                if (!stack.Contains(configuratedType.GetImplementationInterface))
                 {
-                    return configuratedType.GetInstance;
-                }
+                    stack.Push(configuratedType.GetImplementationInterface);
 
-                if (!stack.Contains(configuratedType.GetImplementation))
-                {
-                    stack.Push(configuratedType.GetImplementation);
+                    var instanceType = configuratedType.GetImplementation;
+                    if (instanceType.IsGenericTypeDefinition)
+                    {
+                        instanceType = instanceType.MakeGenericType(currentType.GenericTypeArguments);
+                    }
 
-                    var constructors = configuratedType.GetImplementation.GetConstructors().OrderByDescending(x => x.GetParameters().Length).ToArray();
+                    var constructors = instanceType.GetConstructors().OrderByDescending
+                        (x => x.GetParameters().Length).ToArray();
 
                     bool isCreated = false;
                     int constructorNumber = 1;
@@ -69,7 +98,8 @@ namespace DependencyInjectionContainer
                         try
                         {
                             var useConstructor = constructors[constructorNumber - 1];
-                            result = CreatefromConstructor(useConstructor);
+                            var param = GetConstructorParam(useConstructor);
+                            result = Activator.CreateInstance(instanceType, param);
                             isCreated = true;
                         }
                         catch
@@ -79,7 +109,7 @@ namespace DependencyInjectionContainer
                         }
                     }
 
-                    if (!stack.TryPop(out var temp) || temp != configuratedType.GetImplementation)
+                    if (!stack.TryPop(out var temp) || temp != configuratedType.GetImplementationInterface)
                     {
                         throw new Exception("can't correctly pop element from stack");
                     }
@@ -95,7 +125,7 @@ namespace DependencyInjectionContainer
                 }
                 else
                 {
-                    return null;
+                    throw new Exception($"can't resolve type{stack.FirstOrDefault().Name}");
                 }
             }
             else
@@ -127,7 +157,7 @@ namespace DependencyInjectionContainer
             }         
         }
 
-        private object CreatefromConstructor(ConstructorInfo constructor)
+        private object[] GetConstructorParam(ConstructorInfo constructor)
         {
             var parametersInfo = constructor.GetParameters();
             var parameters = new object[parametersInfo.Length];
@@ -137,23 +167,34 @@ namespace DependencyInjectionContainer
                 parameters[i] = RetrieveInst(container.GetConfiguratedType(parametersInfo[i].ParameterType));
             }
 
-            return constructor.Invoke(parameters);
+            return parameters;
         }
 
         private object RetrieveInst(ConfiguratedType registeredType)
         {
             if (registeredType != null)
             {
-                if (registeredType.IsSingleton &&
-                    registeredType.GetInstance != null)
+                if (registeredType.IsSingleton)
                 {
-                    return registeredType.GetInstance;
+                    if(registeredType.GetInstance == null)
+                    {
+                        lock(obj)
+                        {
+                            if(registeredType.GetInstance == null)
+                            {
+                                registeredType.GetInstance = Create(registeredType.GetImplementationInterface);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return registeredType.GetInstance;
+                    }
                 }
 
-                object crestedInst = Create(registeredType.GetImplementationInterface);
 
-                registeredType.GetInstance = crestedInst;
-                return crestedInst;
+                object createdInst = Create(registeredType.GetImplementationInterface);
+                return createdInst;
             }
 
             throw new Exception("can't resolve this type");

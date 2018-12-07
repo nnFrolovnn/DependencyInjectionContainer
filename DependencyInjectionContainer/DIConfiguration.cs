@@ -10,7 +10,7 @@ namespace DependencyInjectionContainer
     {
         private readonly ConcurrentDictionary<Type, ConfiguratedType> dictionary;
 
-        IDictionary<Type, ConfiguratedType> RegisteredTypesDictionary => dictionary;
+        public IDictionary<Type, ConfiguratedType> RegisteredTypesDictionary => dictionary;
 
         public DIConfiguration()
         {
