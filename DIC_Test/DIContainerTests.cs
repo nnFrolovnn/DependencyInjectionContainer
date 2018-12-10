@@ -1,5 +1,4 @@
 ﻿using System;
-using DependencyInjectionContainer.Interfaces;
 using DependencyInjectionContainer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DIC_Test.TestClasses;
@@ -162,12 +161,12 @@ namespace DIC_Test
         [TestMethod]
         public void ResolveEnumerable()
         {
-            var expected = 2;
-            var conf = new DIConfiguration();
+            int expected = 2;
+            DIConfiguration conf = new DIConfiguration();
             conf.Register<IBar, BarFromIBar>();
             conf.Register<IBar, BarFromABar>();
 
-            var container = new DIContainer(conf);
+            DIContainer container = new DIContainer(conf);
 
             var bars = container.ResolveAll<IBar>();
             Assert.AreEqual(expected, bars.Count());

@@ -1,6 +1,5 @@
 ﻿using DependencyInjectionContainer.Interfaces;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -32,8 +31,8 @@ namespace DependencyInjectionContainer
         public void Register(Type tInterface, Type tImplementation)
         {
             RegisterType(tInterface, tImplementation);
-        }    
-  
+        }
+
         public void RegisterSingleton<TInterface, TImplementation>()
         {
             RegisterType(typeof(TInterface), typeof(TImplementation), true);
@@ -53,13 +52,14 @@ namespace DependencyInjectionContainer
 
         private void RegisterType(Type tInterface, Type tImplementation, bool isSingleton = false)
         {
-            if (!tImplementation.IsInterface && !tImplementation.IsAbstract)
+            if (!tImplementation.IsInterface && !tImplementation.IsAbstract &&
+                tInterface.IsAssignableFrom(tImplementation))
             {
                 ConfiguratedType configuratedType = new ConfiguratedType(tImplementation, tInterface, isSingleton);
 
                 if (!dictionary.TryGetValue(tInterface, out var list))
                 {
-                        dictionary.Add(tInterface, new List<ConfiguratedType>() { configuratedType });
+                    dictionary.Add(tInterface, new List<ConfiguratedType>() { configuratedType });
                 }
                 else
                 {
@@ -75,7 +75,7 @@ namespace DependencyInjectionContainer
             }
             else
             {
-                throw new Exception($"{nameof(tImplementation)} can't be an interface or abstract");
+                throw new Exception($"{nameof(tImplementation)} can't be added with {nameof(tInterface)}");
             }
         }
 
@@ -86,7 +86,7 @@ namespace DependencyInjectionContainer
 
         public IEnumerable<ConfiguratedType> GetConfiguratedTypes(Type type)
         {
-            return dictionary.TryGetValue(type, out var configuratedType)? configuratedType: null;
+            return dictionary.TryGetValue(type, out var configuratedType) ? configuratedType : null;
         }
     }
 }

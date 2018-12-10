@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DIC_Test.TestClasses
+﻿namespace DIC_Test.TestClasses
 {
     internal interface IFoo { }
 
@@ -38,7 +32,6 @@ namespace DIC_Test.TestClasses
             Bar = bar;
         }
     }
-
 
     internal class Nea { }
 

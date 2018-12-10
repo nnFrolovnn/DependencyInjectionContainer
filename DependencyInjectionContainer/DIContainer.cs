@@ -5,8 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DependencyInjectionContainer
 {
@@ -39,7 +37,8 @@ namespace DependencyInjectionContainer
                 {
                     foreach (var item in pair.Value)
                     {
-                        if (item.GetImplementation.IsAbstract || item.GetImplementation.IsInterface)
+                        if (item.GetImplementation.IsAbstract || item.GetImplementation.IsInterface
+                            || !item.GetImplementationInterface.IsAssignableFrom(item.GetImplementation))
                         {
                             return false;
                         }
